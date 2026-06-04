@@ -1,11 +1,22 @@
-<div align="center">
+# 📰 NeuralPress AI News Network - Core Codebase
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A modular ultra-high performance PHP 8 automated newsroom CMS and trust analysis engine.
 
-  <h1>Built with AI Studio</h2>
+## 📁 System Architecture
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+### 🧠 `/core`
+Core drivers including Gemini API connection protocols, MySQLi singleton, CSRF and sanitization filters, clickbait detectors, and trust score engines.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+### 🔌 `/api`
+Rest JSON endpoints facilitating interaction between administrative review cues, content translators, and the public UI layer.
 
-</div>
+### 👨💼 `/admin`
+Administrative dashboards managing article reviews, flags, monetizations, user accounts, and visual parameter logs.
+
+### 🧩 `/includes` & `/templates`
+Highly optimized layouts and responsive grids supporting multi-lingual interfaces and real-time ad placements.
+
+## ⚙️ Requirements
+- PHP 8.1+ with curl and mysqli extensions
+- MySQL 8.0+
+- `.htaccess` enabled Apache webserver

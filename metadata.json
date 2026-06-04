@@ -1,0 +1,6 @@
+{
+  "name": "NeuralPress",
+  "description": "Premium global AI-powered newsroom CMS with pixel-perfect BBC-style UI, trust scoring, translation, and monetization.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
