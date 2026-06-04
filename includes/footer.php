@@ -31,5 +31,9 @@
             © 2026 NeuralPress AI Automated Newsroom CMS. BBC Pixel-Perfect Frontend Model layer. All rights reserved.
         </div>
     </footer>
+    <!-- Client Scripts for NeuralPress Node Streams -->
+    <script src="/assets/js/api.js" defer></script>
+    <script src="/assets/js/ui.js" defer></script>
+    <script src="/assets/js/main.js" defer></script>
 </body>
 </html>
