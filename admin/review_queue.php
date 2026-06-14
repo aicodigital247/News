@@ -3,8 +3,11 @@
  * NeuralPress - Review Queue Dashboard
  */
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/admin_layout.php';
+
 use NeuralPress\Core\Auth;
 use NeuralPress\Core\Database;
+use NeuralPress\Admin\Layout;
 
 Auth::checkRole(['admin', 'editor']);
 $db = Database::getInstance();
@@ -46,65 +49,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 $res = $db->query("SELECT * FROM posts WHERE status = 'pending_review' ORDER BY id DESC");
+
+Layout::renderHeader('Awaiting Editorial Verification', 'Review');
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>NeuralPress Editorial Review Queue</title>
-    <link rel="stylesheet" href="/assets/css/tailwind.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
-    </style>
-</head>
-<body class="bg-gray-100 font-sans text-gray-900 flex flex-col min-h-screen">
-    <header class="bg-black text-white h-14 flex items-center justify-between px-6 shrink-0 shadow-md">
-        <span class="font-black tracking-tighter text-sm flex items-center gap-1.5"><span class="bg-white text-black px-1 leading-none font-bold">N</span> NeuralPress CMS</span>
-        <a href="/admin/dashboard" class="text-xs text-red-400 hover:underline">Back to Overview</a>
-    </header>
-    <main class="max-w-7xl mx-auto px-6 py-8 w-full space-y-6 flex-grow">
-        <h1 class="sidebar-title font-bold text-lg">Awaiting Editorial Verification</h1>
+
+        <div class="flex items-center justify-between">
+            <p class="text-xs text-slate-400 max-w-xl">
+                Manual gatekeeping terminal. Review content queue before broadcasting to public news feeds. Press verification uses AI and semantic checks.
+            </p>
+        </div>
         
         <?php if (!empty($message)): ?>
-            <div class="p-4 mb-4 rounded text-xs <?php echo $messageType === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'; ?>">
+            <div class="p-4 rounded-lg text-xs font-mono <?php echo $messageType === 'error' ? 'bg-red-950/40 border border-red-500/30 text-red-200' : 'bg-emerald-950/40 border border-emerald-500/30 text-emerald-200'; ?>">
                 <?php echo htmlspecialchars($message); ?>
             </div>
         <?php endif; ?>
 
-        <div class="bg-white border p-6 rounded shadow-sm">
+        <div class="bg-slate-900/40 border border-slate-900 rounded-xl overflow-hidden p-6 space-y-4">
             <?php if (!$res || $res->num_rows === 0): ?>
-                <p class="text-xs text-slate-500 font-light">All pending drafts processed. Broadcast stream remains steady.</p>
+                <div class="text-center py-10 space-y-3">
+                    <div class="w-12 h-12 rounded-full bg-slate-950 flex items-center justify-center text-slate-600 mx-auto border border-slate-800">
+                        ✓
+                    </div>
+                    <p class="text-xs text-slate-400 font-mono">ALL PENDING DRAFTS PROCESSED. BROADCAST STREAM REMAINS STEADY.</p>
+                </div>
             <?php else: ?>
-                <table class="w-full text-xs">
-                    <thead>
-                        <tr class="border-b text-left text-slate-400 uppercase font-mono text-[10px]">
-                            <th class="pb-2">Title</th>
-                            <th class="pb-2">Category</th>
-                            <th class="pb-2">Trust %</th>
-                            <th class="pb-2">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php while ($row = $res->fetch_assoc()): ?>
-                            <tr class="border-b last:border-0 hover:bg-slate-50">
-                                <td class="py-3 font-semibold"><?php echo htmlspecialchars($row['title']); ?></td>
-                                <td class="py-3 text-slate-500"><?php echo htmlspecialchars($row['category']); ?></td>
-                                <td class="py-3 font-mono font-bold text-emerald-600"><?php echo intval($row['trust_score']); ?>%</td>
-                                <td class="py-3">
-                                    <form method="POST" action="" class="inline">
-                                        <?php echo \NeuralPress\Core\CSRF::renderField(); ?>
-                                        <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
-                                        <input type="hidden" name="action" value="verify">
-                                        <button type="submit" class="bg-[#bb1919] text-white px-2.5 py-1 text-[10px] font-bold uppercase hover:bg-[#801111] cursor-pointer">Verify Natively</button>
-                                    </form>
-                                </td>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs text-left">
+                        <thead>
+                            <tr class="border-b border-slate-900 text-slate-400 uppercase font-mono text-[10px] tracking-wider select-none bg-slate-950/20">
+                                <th class="py-3 px-4">Title</th>
+                                <th class="py-3 px-4">Category</th>
+                                <th class="py-3 px-4 text-center">Initial Trust</th>
+                                <th class="py-3 px-4 text-right">Action</th>
                             </tr>
-                        <?php endwhile; ?>
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-slate-900/30 font-sans">
+                            <?php while ($row = $res->fetch_assoc()): ?>
+                                <tr class="hover:bg-slate-900/20 transition">
+                                    <td class="py-4 px-4 font-semibold text-slate-200 max-w-xs md:max-w-md truncate"><?php echo htmlspecialchars($row['title']); ?></td>
+                                    <td class="py-4 px-4 text-slate-400 font-mono text-[11px]"><?php echo htmlspecialchars($row['category']); ?></td>
+                                    <td class="py-4 px-4 text-center font-mono font-bold text-emerald-400"><?php echo intval($row['trust_score']); ?>%</td>
+                                    <td class="py-4 px-4 text-right">
+                                        <form method="POST" action="" class="inline">
+                                            <?php echo \NeuralPress\Core\CSRF::renderField(); ?>
+                                            <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
+                                            <input type="hidden" name="action" value="verify">
+                                            <button type="submit" class="bg-[#bb1919] text-white px-3.5 py-2 text-[10px] font-bold font-mono uppercase hover:bg-[#801111] rounded-md transition duration-150 cursor-pointer shadow-sm tracking-wider">Verify Natively</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             <?php endif; ?>
         </div>
-    </main>
-</body>
-</html>
+
+<?php
+Layout::renderFooter();
+?>

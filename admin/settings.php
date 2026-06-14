@@ -3,36 +3,43 @@
  * NeuralPress - Main CMS configuration panel
  */
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/admin_layout.php';
+
 use NeuralPress\Core\Auth;
+use NeuralPress\Admin\Layout;
 
 Auth::checkRole(['admin']);
+
+Layout::renderHeader('System Configurations', 'Settings');
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Global CMS Settings</title>
-    <link rel="stylesheet" href="/assets/css/tailwind.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
-    </style>
-</head>
-<body class="bg-gray-100 font-sans text-gray-900 flex flex-col min-h-screen">
-    <header class="bg-black text-white h-14 flex items-center justify-between px-6 shrink-0 shadow-md">
-        <span class="font-black tracking-tighter text-sm flex items-center gap-1.5"><span class="bg-white text-black px-1 leading-none font-bold">N</span> NeuralPress CMS</span>
-        <a href="/admin/dashboard" class="text-xs text-red-400 hover:underline">Back to Overview</a>
-    </header>
-    <main class="max-w-7xl mx-auto px-6 py-8 w-full space-y-6 flex-grow font-sans">
-        <h1 class="sidebar-title font-bold text-lg">System Configurations</h1>
-        <div class="bg-white border p-6 rounded shadow-sm space-y-4">
-            <p class="text-xs text-slate-500 font-light">Audit configurations, logging intervals, and platform cache directories.</p>
-            <div class="space-y-3 font-mono text-xs text-slate-600">
-                <p><strong>PLATFORM NAME:</strong> NeuralPress Global Newsroom CMS</p>
-                <p><strong>LOCALE CONTEXT:</strong> UTC (+00:00 GMT - British Standard Time)</p>
-                <p><strong>ROUTING ENGINE:</strong> Pure PHP 8 Front-Controller with Apache HTACCESS bypass</p>
+
+        <div class="flex items-center justify-between">
+            <p class="text-xs text-slate-400 max-w-xl">
+                Audit configurations, logging intervals, and platform cache directories. Manage global CMS states.
+            </p>
+        </div>
+
+        <div class="bg-slate-900/40 border border-slate-900 rounded-xl p-6 space-y-4">
+            <h3 class="text-xs font-mono font-bold uppercase tracking-widest text-[#bb1919] border-b border-slate-900 pb-2">// HARDWARE & ENVIRONMENT SPECIFICATION</h3>
+            
+            <div class="space-y-4 font-mono text-xs text-slate-405 leading-relaxed">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-slate-900/60 pb-3">
+                    <span class="text-slate-500 uppercase font-mono text-[10px] tracking-wider">Platform Name</span>
+                    <strong class="col-span-2 text-slate-200">NeuralPress Global Newsroom CMS</strong>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-slate-900/60 pb-3">
+                    <span class="text-slate-500 uppercase font-mono text-[10px] tracking-wider">Locale Context</span>
+                    <strong class="col-span-2 text-slate-200">UTC (+00:00 GMT - British Standard Time)</strong>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pb-1">
+                    <span class="text-slate-500 uppercase font-mono text-[10px] tracking-wider">Routing Engine</span>
+                    <strong class="col-span-2 text-slate-200">Pure PHP 8.2 FastCGI with Apache Native Rewrites</strong>
+                </div>
             </div>
         </div>
-    </main>
-</body>
-</html>
+
+<?php
+Layout::renderFooter();
+?>

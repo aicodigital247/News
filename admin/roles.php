@@ -3,36 +3,43 @@
  * NeuralPress - Permissions Matrix Mapping Configuration
  */
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/admin_layout.php';
+
 use NeuralPress\Core\Auth;
+use NeuralPress\Admin\Layout;
 
 Auth::checkRole(['admin']);
+
+Layout::renderHeader('Journalism Role Access Configurations', 'Users');
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Authorized Access Keys</title>
-    <link rel="stylesheet" href="/assets/css/tailwind.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
-    </style>
-</head>
-<body class="bg-gray-100 font-sans text-gray-900 flex flex-col min-h-screen">
-    <header class="bg-black text-white h-14 flex items-center justify-between px-6 shrink-0 shadow-md">
-        <span class="font-black tracking-tighter text-sm flex items-center gap-1.5"><span class="bg-white text-black px-1 leading-none font-bold">N</span> NeuralPress CMS</span>
-        <a href="/admin/dashboard" class="text-xs text-red-400 hover:underline">Back to Overview</a>
-    </header>
-    <main class="max-w-7xl mx-auto px-6 py-8 w-full space-y-6 flex-grow">
-        <h1 class="sidebar-title font-bold text-lg">Journalism Role Access Configurations</h1>
-        <div class="bg-white border p-6 rounded shadow-sm space-y-4">
-            <p class="text-xs text-slate-500 font-light">Role rules in database schema currently restrict actions in the following ways:</p>
-            <div class="text-xs space-y-3 font-mono">
-                <p><strong>ADMIN:</strong> Unlimited write, delete, ad control, schema updates, AI system prompt access.</p>
-                <p><strong>EDITOR:</strong> Fact-check override operations, review queue sorting, draft approval and publish steps.</p>
-                <p><strong>JOURNALIST:</strong> Generate drafts from topic words, list articles, write standard investigative reports.</p>
+
+        <div class="flex items-center justify-between">
+            <p class="text-xs text-slate-400 max-w-xl">
+                Define the permissions, access barriers, and security clearance heights for the editorial staff roles.
+            </p>
+        </div>
+
+        <div class="bg-slate-900/40 border border-slate-900 rounded-xl p-6 space-y-4">
+            <h3 class="text-xs font-mono font-bold uppercase tracking-widest text-[#bb1919] border-b border-slate-900 pb-2">// SYSTEM PERMISSION SPECIFICATION Matrix</h3>
+            
+            <div class="space-y-4 font-mono text-xs text-slate-350 leading-relaxed">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 border-b border-slate-900/60 pb-3">
+                    <span class="text-slate-500 uppercase font-mono text-[9px] tracking-wider font-bold">ADMIN ROLE</span>
+                    <p class="col-span-3 text-slate-200">Unlimited write, delete, ad control, schema updates, AI system prompt steering parameters, and financial settlements.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 border-b border-slate-900/60 pb-3">
+                    <span class="text-slate-500 uppercase font-mono text-[9px] tracking-wider font-bold">EDITOR ROLE</span>
+                    <p class="col-span-3 text-slate-200">Fact-check override operations, review queue sorting, manual verifications, draft approval, and publication releases.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pb-1">
+                    <span class="text-slate-500 uppercase font-mono text-[9px] tracking-wider font-bold">JOURNALIST / CREATOR</span>
+                    <p class="col-span-3 text-slate-200">Generate drafts from Google search hotscopes, document core articles, list creator stats, and withdraw accumulated earnings.</p>
+                </div>
             </div>
         </div>
-    </main>
-</body>
-</html>
+
+<?php
+Layout::renderFooter();
+?>

@@ -3,8 +3,11 @@
  * NeuralPress - Performance and monetization analytics dashboards
  */
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/admin_layout.php';
+
 use NeuralPress\Core\Auth;
 use NeuralPress\Core\Database;
+use NeuralPress\Admin\Layout;
 
 Auth::checkRole(['admin', 'editor']);
 $db = Database::getInstance();
@@ -17,40 +20,31 @@ $totalImps = $impsRow['total_imps'] ?? 0;
 
 $clicksRow = $db->query("SELECT COUNT(*) as total_clicks FROM ad_events WHERE event_type = 'click'")->fetch_assoc();
 $totalClicks = $clicksRow['total_clicks'] ?? 0;
+
+Layout::renderHeader('System Traffic Analytics', 'Overview');
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Traffic Analytics</title>
-    <link rel="stylesheet" href="/assets/css/tailwind.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
-    </style>
-</head>
-<body class="bg-gray-100 font-sans text-gray-900 flex flex-col min-h-screen">
-    <header class="bg-black text-white h-14 flex items-center justify-between px-6 shrink-0 shadow-md">
-        <span class="font-black tracking-tighter text-sm flex items-center gap-1.5"><span class="bg-white text-black px-1 leading-none font-bold">N</span> NeuralPress CMS</span>
-        <a href="/admin/dashboard" class="text-xs text-red-400 hover:underline">Back to Overview</a>
-    </header>
-    <main class="max-w-7xl mx-auto px-6 py-8 w-full space-y-6 flex-grow">
-        <h1 class="sidebar-title font-bold text-lg">System Traffic Analytics</h1>
-        
+
+        <div class="flex items-center justify-between">
+            <p class="text-xs text-slate-400 max-w-xl">
+                Global performance index tracking total node views, ad monetization metrics, and reader engagement levels.
+            </p>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white border p-5 rounded shadow-sm">
-                <span class="text-[9px] text-[#bb1919] font-mono uppercase block font-extrabold">Accumulated Node Reads</span>
-                <span class="text-2xl font-black text-slate-800 font-mono mt-2 block"><?php echo number_format($totalViews); ?> reads</span>
+            <div class="bg-slate-900/40 border border-slate-900 p-6 rounded-xl hover:border-slate-800 transition">
+                <span class="text-[9px] text-[#bb1919] font-mono uppercase block font-extrabold">// Accumulated Node Reads</span>
+                <span class="text-3xl font-extrabold text-slate-100 font-mono mt-3 block"><?php echo number_format($totalViews); ?> <span class="text-xs text-slate-400">reads</span></span>
             </div>
-            <div class="bg-white border p-5 rounded shadow-sm">
-                <span class="text-[9px] text-[#bb1919] font-mono uppercase block font-extrabold">Sponsored Impressions</span>
-                <span class="text-2xl font-black text-slate-800 font-mono mt-2 block"><?php echo number_format($totalImps); ?> impressions</span>
+            <div class="bg-slate-900/40 border border-slate-900 p-6 rounded-xl hover:border-slate-800 transition">
+                <span class="text-[9px] text-[#bb1919] font-mono uppercase block font-extrabold">// Sponsored Impressions</span>
+                <span class="text-3xl font-extrabold text-slate-100 font-mono mt-3 block"><?php echo number_format($totalImps); ?> <span class="text-xs text-slate-400">imps</span></span>
             </div>
-            <div class="bg-white border p-5 rounded shadow-sm">
-                <span class="text-[9px] text-[#bb1919] font-mono uppercase block font-extrabold">Sponsored Clicks</span>
-                <span class="text-2xl font-black text-slate-800 font-mono mt-2 block"><?php echo number_format($totalClicks); ?> clicks</span>
+            <div class="bg-slate-900/40 border border-slate-900 p-6 rounded-xl hover:border-slate-800 transition">
+                <span class="text-[9px] text-[#bb1919] font-mono uppercase block font-extrabold">// Sponsored Clicks</span>
+                <span class="text-3xl font-extrabold text-slate-100 font-mono mt-3 block"><?php echo number_format($totalClicks); ?> <span class="text-xs text-slate-400">clicks</span></span>
             </div>
         </div>
-    </main>
-</body>
-</html>
+
+<?php
+Layout::renderFooter();
+?>

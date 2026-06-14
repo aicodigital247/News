@@ -3,8 +3,11 @@
  * NeuralPress - Admin CMS Dashboard
  */
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/admin_layout.php';
+
 use NeuralPress\Core\Auth;
 use NeuralPress\Core\Database;
+use NeuralPress\Admin\Layout;
 
 Auth::startSession();
 $user = Auth::getCurrentUser();
@@ -19,63 +22,37 @@ $db = Database::getInstance();
 $totalPosts = $db->query("SELECT COUNT(*) as cnt FROM posts")->fetch_assoc()['cnt'] ?? 0;
 $pendingReview = $db->query("SELECT COUNT(*) as cnt FROM posts WHERE status = 'pending_review'")->fetch_assoc()['cnt'] ?? 0;
 $flaggedCount = $db->query("SELECT COUNT(*) as cnt FROM posts WHERE status = 'flagged'")->fetch_assoc()['cnt'] ?? 0;
+
+Layout::renderHeader('System Metrics Overview', 'Overview');
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>NeuralPress Administrative Dashboard</title>
-    <link rel="stylesheet" href="/assets/css/tailwind.css">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
-    </style>
-</head>
-<body class="bg-gray-100 font-sans text-gray-900 flex flex-col min-h-screen">
-    <header class="bg-black text-white h-14 flex items-center justify-between px-6 shrink-0 shadow-md">
-        <span class="font-black tracking-tighter text-sm flex items-center gap-1.5 select-none">
-            <span class="bg-white text-black px-1 leading-none font-bold">N</span> NeuralPress CMS
-        </span>
-        <div class="flex items-center gap-4 text-xs">
-            <span>Logged in as: <strong><?php echo htmlspecialchars($user['username']); ?></strong> (<?php echo htmlspecialchars($user['role']); ?>)</span>
-            <span class="text-gray-700">|</span>
-            <a href="/admin/logout" class="text-red-400 hover:underline">Sign Out</a>
-        </div>
-    </header>
 
-    <div class="flex-grow flex flex-col md:flex-row max-w-7xl mx-auto w-full px-6 py-8 gap-8">
-        <!-- Dashboard Sidebar Navigation -->
-        <nav class="w-full md:w-56 shrink-0 space-y-1 bg-white border border-gray-200 p-4 rounded text-xs font-bold uppercase tracking-wider">
-            <a href="/admin/dashboard" class="block py-2 px-3 bg-red-50 text-[#bb1919] rounded">Overview</a>
-            <a href="/admin/posts" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Post Archives</a>
-            <a href="/admin/categories" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Manage Categories</a>
-            <a href="/admin/review_queue" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded flex items-center justify-between">Review Queue <span class="bg-red-700 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full"><?php echo $pendingReview; ?></span></a>
-            <a href="/admin/flagged_posts" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded flex items-center justify-between">Flagged Risks <span class="bg-black text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full"><?php echo $flaggedCount; ?></span></a>
-            <a href="/admin/users" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Users & Roles</a>
-            <a href="/admin/withdrawals" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Creator Payouts</a>
-            <a href="/admin/ads" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Ad Monetisation</a>
-            <a href="/admin/ai_control" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded text-[#bb1919]">AI Control Portal</a>
-            <a href="/admin/settings" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Global Settings</a>
-            <div class="pt-6">
-                <a href="/" class="block text-center bg-[#bb1919] text-white py-2 select-none text-[10px] tracking-widest font-extrabold hover:bg-[#801111]">VIEW PUBLIC SITE</a>
-            </div>
-        </nav>
-
-        <!-- Main Workspace -->
-        <main class="flex-1 space-y-6">
-            <h1 class="sidebar-title font-bold text-lg">System Metrics Overview</h1>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white border border-gray-200 p-5 rounded shadow-sm relative">
-                    <span class="text-[10px] text-gray-400 font-mono uppercase block">TOTAL COMMITTED ARTICLES</span>
-                    <span class="text-3xl font-black text-slate-800 font-mono block mt-1"><?php echo $totalPosts; ?></span>
+                <div class="bg-slate-900/40 border border-slate-900 p-6 rounded-xl hover:border-slate-800/80 transition duration-150 relative group">
+                    <div class="absolute top-4 right-4 text-slate-700 group-hover:text-[#bb1919] transition font-mono text-xs">M01</div>
+                    <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">TOTAL COMMITTED ARTICLES</span>
+                    <span class="text-4xl font-extrabold text-slate-105 font-mono block mt-2"><?php echo $totalPosts; ?></span>
+                    <div class="mt-4 flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
+                        <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                        <span>Archived inside core-node database</span>
+                    </div>
                 </div>
-                <div class="bg-white border border-gray-200 p-5 rounded shadow-sm relative">
-                    <span class="text-[10px] text-gray-400 font-mono uppercase block">AWAITING EDITORIAL REVIEW</span>
-                    <span class="text-3xl font-black text-amber-500 font-mono block mt-1"><?php echo $pendingReview; ?></span>
+                <div class="bg-slate-900/40 border border-slate-900 p-6 rounded-xl hover:border-slate-800/80 transition duration-150 relative group">
+                    <div class="absolute top-4 right-4 text-slate-700 group-hover:text-[#bb1919] transition font-mono text-xs">M02</div>
+                    <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">AWAITING EDITORIAL REVIEW</span>
+                    <span class="text-4xl font-extrabold text-amber-500 font-mono block mt-2"><?php echo $pendingReview; ?></span>
+                    <div class="mt-4 flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
+                        <span class="w-1.5 h-1.5 bg-amber-500 rounded-full animate-ping"></span>
+                        <span>Requiring high-status verification</span>
+                    </div>
                 </div>
-                <div class="bg-white border border-gray-200 p-5 rounded shadow-sm relative">
-                    <span class="text-[10px] text-gray-400 font-mono uppercase block">AI RISK FLAGGED BULLETINS</span>
-                    <span class="text-3xl font-black text-red-600 font-mono block mt-1"><?php echo $flaggedCount; ?></span>
+                <div class="bg-slate-900/40 border border-slate-900 p-6 rounded-xl hover:border-slate-800/80 transition duration-150 relative group">
+                    <div class="absolute top-4 right-4 text-slate-700 group-hover:text-[#bb1919] transition font-mono text-xs">M03</div>
+                    <span class="text-[10px] text-slate-400 font-mono uppercase tracking-wider block">AI RISK FLAGGED BULLETINS</span>
+                    <span class="text-4xl font-extrabold text-red-600 font-mono block mt-2"><?php echo $flaggedCount; ?></span>
+                    <div class="mt-4 flex items-center gap-1.5 text-[10px] font-mono text-slate-500">
+                        <span class="w-1.5 h-1.5 bg-red-600 rounded-full animate-pulse"></span>
+                        <span>Quarantined by automated agent</span>
+                    </div>
                 </div>
             </div>
 
@@ -142,19 +119,22 @@ $flaggedCount = $db->query("SELECT COUNT(*) as cnt FROM posts WHERE status = 'fl
             $allTrends = \NeuralPress\Core\GoogleTrends::getTrendingTopics();
             $topTrends = array_slice($allTrends, 0, 5);
             ?>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 bg-white border border-gray-200 p-6 rounded shadow-sm">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 bg-slate-900/40 border border-slate-900 p-6 lg:p-8 rounded-xl">
                 <!-- SVG Area/Line Chart -->
-                <div class="lg:col-span-2 space-y-3">
-                    <div class="flex items-center justify-between border-b pb-1.5">
-                        <div class="space-y-0.5">
-                            <h3 class="text-xs font-mono font-bold uppercase tracking-widest text-[#bb1919] flex items-center gap-1">
-                                <span class="w-1.5 h-1.5 bg-red-700 animate-ping rounded-full inline-block"></span>
-                                // Platform-Wide Reading Velocity (Last 7 Days)
+                <div class="lg:col-span-2 space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-900 pb-4">
+                        <div class="space-y-1">
+                            <h3 class="text-xs font-mono font-bold uppercase tracking-widest text-[#bb1919] flex items-center gap-1.5">
+                                <span class="relative flex h-2 w-2">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#bb1919] opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-2 w-2 bg-[#bb1919]"></span>
+                                </span>
+                                Platform-Wide Reading Velocity (Last 7 Days)
                             </h3>
-                            <p class="text-[10px] text-gray-500">Combined reader activity across all active content categories.</p>
+                            <p class="text-[10px] text-slate-500">Combined global nodes telemetry aggregated for live distribution reports.</p>
                         </div>
                         <div class="text-right">
-                            <span class="text-xs font-mono font-bold text-slate-800"><?php echo number_format($platformTotalViews); ?> Views Logged</span>
+                            <span class="text-xs font-mono font-bold text-slate-300"><?php echo number_format($platformTotalViews); ?> Views Logged</span>
                         </div>
                     </div>
 
@@ -163,7 +143,7 @@ $flaggedCount = $db->query("SELECT COUNT(*) as cnt FROM posts WHERE status = 'fl
                         <svg viewBox="0 0 <?php echo $svgW; ?> <?php echo $svgH; ?>" class="w-full overflow-visible" style="font-family: 'JetBrains Mono', monospace;">
                             <defs>
                                 <linearGradient id="adminChartGrad" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="0%" stop-color="#bb1919" stop-opacity="0.25"/>
+                                    <stop offset="0%" stop-color="#bb1919" stop-opacity="0.30"/>
                                     <stop offset="100%" stop-color="#bb1919" stop-opacity="0.00"/>
                                 </linearGradient>
                             </defs>
@@ -173,43 +153,43 @@ $flaggedCount = $db->query("SELECT COUNT(*) as cnt FROM posts WHERE status = 'fl
                                 $gridY = $paddingT + (($cH / 3) * $gridIdx);
                                 $gridVal = round($maxValByTen - (($maxValByTen - $minValByTen) / 3) * $gridIdx);
                             ?>
-                                <line x1="<?php echo $paddingL; ?>" y1="<?php echo $gridY; ?>" x2="<?php echo $svgW - $paddingR; ?>" y2="<?php echo $gridY; ?>" stroke="#f1f5f9" stroke-width="1.5" />
-                                <text x="<?php echo $paddingL - 8; ?>" y="<?php echo $gridY + 3; ?>" fill="#94a3b8" font-size="8" text-anchor="end"><?php echo $gridVal; ?></text>
+                                <line x1="<?php echo $paddingL; ?>" y1="<?php echo $gridY; ?>" x2="<?php echo $svgW - $paddingR; ?>" y2="<?php echo $gridY; ?>" stroke="#1e293b" stroke-width="1" stroke-dasharray="2,2" />
+                                <text x="<?php echo $paddingL - 8; ?>" y="<?php echo $gridY + 3; ?>" fill="#475569" font-size="8" text-anchor="end"><?php echo $gridVal; ?></text>
                             <?php endfor; ?>
 
                             <!-- Area shadow projection -->
                             <path d="<?php echo $gradientAreaD; ?>" fill="url(#adminChartGrad)" />
 
                             <!-- Path stroke wireline -->
-                            <path d="<?php echo $polylineD; ?>" fill="none" stroke="#bb1919" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+                            <path d="<?php echo $polylineD; ?>" fill="none" stroke="#bb1919" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
 
                             <!-- Point markers -->
                             <?php foreach ($svgPoints as $pt): ?>
-                                <circle cx="<?php echo $pt['x']; ?>" cy="<?php echo $pt['y']; ?>" r="4" fill="#ffffff" stroke="#bb1919" stroke-width="2" />
-                                <text x="<?php echo $pt['x']; ?>" y="<?php echo $pt['y'] - 8; ?>" fill="#0f172a" font-size="8" font-weight="bold" text-anchor="middle"><?php echo $pt['val']; ?></text>
-                                <text x="<?php echo $pt['x']; ?>" y="<?php echo $svgH - 10; ?>" fill="#64748b" font-size="8" text-anchor="middle" font-weight="500"><?php echo $pt['label']; ?></text>
+                                <circle cx="<?php echo $pt['x']; ?>" cy="<?php echo $pt['y']; ?>" r="3.5" fill="#ffffff" stroke="#bb1919" stroke-width="2" />
+                                <text x="<?php echo $pt['x']; ?>" y="<?php echo $pt['y'] - 8; ?>" fill="#f8fafc" font-size="8" font-weight="bold" text-anchor="middle"><?php echo $pt['val']; ?></text>
+                                <text x="<?php echo $pt['x']; ?>" y="<?php echo $svgH - 8; ?>" fill="#64748b" font-size="8" text-anchor="middle" font-weight="500"><?php echo $pt['label']; ?></text>
                             <?php endforeach; ?>
                         </svg>
                     </div>
                 </div>
 
                 <!-- Google Trends Side Card -->
-                <div class="space-y-3 bg-slate-50/50 border border-slate-100 p-4 rounded-sm">
-                    <h4 class="text-xs font-mono font-bold uppercase tracking-widest text-[#bb1919] border-b pb-1.5">// REALTIME GOOGLE TRENDS</h4>
+                <div class="space-y-4 bg-slate-950/60 border border-slate-900 p-5 rounded-lg">
+                    <h4 class="text-xs font-mono font-bold uppercase tracking-widest text-[#bb1919] border-b border-slate-900 pb-2">// REALTIME GOOGLE TRENDS</h4>
                     <div class="space-y-3">
                         <?php foreach ($topTrends as $trendIdx => $trend): ?>
-                            <div class="text-[11px] leading-relaxed flex items-start justify-between border-b last:border-0 pb-2 bg-white/70 p-2 rounded-xs border border-slate-100 hover:border-red-200 transition">
-                                <div class="space-y-1 pr-1 flex-1">
-                                    <div class="flex items-center gap-1">
-                                        <span class="bg-red-700/5 text-red-750 font-mono text-[9px] font-black px-1.5 py-0.2 rounded-full">#<?php echo $trendIdx + 1; ?></span>
-                                        <strong class="text-slate-900 font-bold"><?php echo htmlspecialchars($trend['title']); ?></strong>
+                            <div class="text-[11px] leading-relaxed flex items-start justify-between border-b border-slate-900 last:border-0 pb-3 bg-slate-900/20 p-2.5 rounded-md border border-slate-950 hover:border-slate-800 transition">
+                                <div class="space-y-1.5 pr-1 flex-1">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="bg-[#bb1919]/10 text-[#bb1919] font-mono text-[9px] font-black px-1.5 py-0.5 rounded-full">#<?php echo $trendIdx + 1; ?></span>
+                                        <strong class="text-slate-100 font-medium"><?php echo htmlspecialchars($trend['title']); ?></strong>
                                     </div>
-                                    <span class="text-[9px] font-mono text-slate-500 block">Traffic: <strong class="text-slate-800"><?php echo htmlspecialchars($trend['traffic']); ?></strong> (<?php echo htmlspecialchars($trend['source']); ?>)</span>
+                                    <span class="text-[9px] font-mono text-slate-500 block">Traffic: <strong class="text-slate-350"><?php echo htmlspecialchars($trend['traffic']); ?></strong> (<?php echo htmlspecialchars($trend['source']); ?>)</span>
                                 </div>
                                 <a 
                                     href="/admin/write?seed_topic=<?php echo urlencode($trend['title']); ?>" 
                                     title="Auto-compose bulletin draft using search hotscope topic"
-                                    class="bg-black hover:bg-slate-800 text-white font-mono text-[9px] font-black tracking-wider uppercase px-2 py-1 rounded transition whitespace-nowrap self-center"
+                                    class="bg-[#bb1919] hover:bg-[#801111] text-white font-mono text-[9px] font-black tracking-wider uppercase px-2.5 py-1.5 rounded transition whitespace-nowrap self-center shadow-sm"
                                 >
                                     DRAFT
                                 </a>
@@ -219,14 +199,14 @@ $flaggedCount = $db->query("SELECT COUNT(*) as cnt FROM posts WHERE status = 'fl
                 </div>
             </div>
 
-            <div class="bg-white border border-gray-200 p-6 rounded shadow-sm space-y-4">
-                <h3 class="font-bold text-sm border-b pb-2 text-slate-800">Recent Security Audit Logs</h3>
-                <div class="text-xs font-mono space-y-2 text-slate-500">
-                    <p>[2027-06-04 17:01] INFO: Database initialized correctly using Prepared parameters.</p>
-                    <p>[2027-06-04 17:03] WARNING: Translation cache query bypass throttled from IP: 127.0.0.1 via API Key lock.</p>
+            <div class="bg-slate-900/40 border border-slate-900 p-6 rounded-xl space-y-4">
+                <h3 class="font-bold text-sm border-b border-slate-900 pb-3 text-slate-200">Recent Security Audit Logs</h3>
+                <div class="text-xs font-mono space-y-2 text-slate-400">
+                    <p class="flex items-center gap-2"><span class="text-slate-600">[2027-06-04 17:01]</span> <span class="text-emerald-500 font-bold uppercase text-[10px]">INFO:</span> Database initialized correctly using Prepared parameters.</p>
+                    <p class="flex items-center gap-2"><span class="text-slate-600">[2027-06-04 17:03]</span> <span class="text-amber-500 font-bold uppercase text-[10px]">WARNING:</span> Translation cache query bypass throttled from IP: 127.0.0.1 via API Key lock.</p>
                 </div>
             </div>
-        </main>
-    </div>
-</body>
-</html>
+
+<?php
+Layout::renderFooter();
+?>
