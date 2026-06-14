@@ -11,10 +11,10 @@
             <div>
                 <h4 class="text-white text-xs font-bold uppercase tracking-wider mb-3">Sections</h4>
                 <ul class="text-xs space-y-2">
-                    <li><a href="/category/World" class="hover:text-white transition">World News</a></li>
-                    <li><a href="/category/Business" class="hover:text-white transition">Business & Finance</a></li>
-                    <li><a href="/category/Technology" class="hover:text-white transition">Science & Technology</a></li>
-                    <li><a href="/category/Sports" class="hover:text-white transition">Global Sports</a></li>
+                    <li><a href="<?php echo UrlManager::getCategoryUrl('World'); ?>" class="hover:text-white transition">World News</a></li>
+                    <li><a href="<?php echo UrlManager::getCategoryUrl('Business'); ?>" class="hover:text-white transition">Business & Finance</a></li>
+                    <li><a href="<?php echo UrlManager::getCategoryUrl('Technology'); ?>" class="hover:text-white transition">Science & Technology</a></li>
+                    <li><a href="<?php echo UrlManager::getCategoryUrl('Sports'); ?>" class="hover:text-white transition">Global Sports</a></li>
                 </ul>
             </div>
             <div>
@@ -23,7 +23,7 @@
                     Fully optimized MySQLi schema. 100% prepared bindings. Engineered for strict corporate auditing systems.
                 </p>
                 <div class="mt-4">
-                    <a href="/admin/login.php" class="bg-[#bb1919] hover:bg-[#801111] text-white text-xs font-bold uppercase tracking-wide px-3.5 py-1.5 transition">CMS Dashboard Login</a>
+                    <a href="/admin/login" class="bg-[#bb1919] hover:bg-[#801111] text-white text-xs font-bold uppercase tracking-wide px-3.5 py-1.5 transition">CMS Dashboard Login</a>
                 </div>
             </div>
         </div>
@@ -32,8 +32,5 @@
         </div>
     </footer>
     <!-- Client Scripts for NeuralPress Node Streams -->
-    <script src="/assets/js/api.js" defer></script>
-    <script src="/assets/js/ui.js" defer></script>
-    <script src="/assets/js/main.js" defer></script>
 </body>
 </html>

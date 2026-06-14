@@ -23,7 +23,7 @@ $res = $db->query("SELECT id, username, email, role, created_at FROM users ORDER
 <body class="bg-gray-100 font-sans text-gray-900 flex flex-col min-h-screen">
     <header class="bg-black text-white h-14 flex items-center justify-between px-6 shrink-0 shadow-md">
         <span class="font-black tracking-tighter text-sm flex items-center gap-1.5"><span class="bg-white text-black px-1 leading-none font-bold">N</span> NeuralPress CMS</span>
-        <a href="/admin/dashboard.php" class="text-xs text-red-400 hover:underline">Back to Overview</a>
+        <a href="/admin/dashboard" class="text-xs text-red-300 hover:underline">Back to Overview</a>
     </header>
     <main class="max-w-7xl mx-auto px-6 py-8 w-full space-y-6 flex-grow font-sans">
         <h1 class="sidebar-title font-bold text-lg">System Operator Directory</h1>

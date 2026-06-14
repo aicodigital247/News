@@ -37,9 +37,15 @@ try {
     $slug = SlugGenerator::create($title, $db->getConnection());
     $seo = SEOEngine::compileMetadata($title, $content, $category);
 
-    $sql = "INSERT INTO posts (author_id, title, slug, summary, content, category, seo_title, seo_description, seo_keywords, status) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')";
+    // Extract first image src if present
+    $thumbnailUrl = null;
+    if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $matches)) {
+        $thumbnailUrl = $matches[1];
+    }
+
+    $sql = "INSERT INTO posts (author_id, title, slug, summary, content, category, seo_title, seo_description, seo_keywords, thumbnail_url, status) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')";
     $success = $db->query($sql, "sssssssss", [
-        1, $title, $slug, $summary, $content, $category, $seo['seo_title'], $seo['seo_description'], $seo['seo_keywords']
+        $title, $slug, $summary, $content, $category, $seo['seo_title'], $seo['seo_description'], $seo['seo_keywords'], $thumbnailUrl
     ]);
 
     if ($success) {

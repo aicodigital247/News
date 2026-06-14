@@ -15,6 +15,7 @@ const app = express();
 const PORT = 3000;
 
 app.use(express.json());
+app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
 // Path to JSON persistent store
 const articlesDbPath = path.join(process.cwd(), "src", "data", "articles.json");
@@ -114,7 +115,7 @@ app.get("/api/post", async (req, res) => {
 // PRIVATE api: create post manually
 app.post("/api/posts", async (req, res) => {
   try {
-    const { title, summary, content, category, author } = req.body;
+    const { title, summary, content, category, author, seo_title, seo_description, seo_keywords } = req.body;
     if (!title || !content || !category) {
       return res.status(400).json({ error: "Missing required fields: title, content, category" });
     }
@@ -134,14 +135,17 @@ app.post("/api/posts", async (req, res) => {
       content,
       category,
       language: "en",
-      thumbnail_url: null,
+      thumbnail_url: (() => {
+        const match = content.match(/<img[^>]+src=["']([^"']+)["']/i);
+        return match ? match[1] : null;
+      })(),
       status: "draft", // Starts as draft per guidelines
       trust_score: 100,
       risk_level: "low",
       verification_reason: "Pre-review draft. Pending Trust Engine evaluation.",
-      seo_title: title,
-      seo_description: summary || content.substring(0, 150),
-      seo_keywords: category.toLowerCase(),
+      seo_title: seo_title || title,
+      seo_description: seo_description || summary || content.substring(0, 150),
+      seo_keywords: seo_keywords || category.toLowerCase(),
       views: 0,
       created_at: new Date().toISOString(),
       translations: {}

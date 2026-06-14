@@ -29,10 +29,16 @@ $authorId = intval($input['author_id'] ?? 1);
 $slug = SlugGenerator::create($title, $db->getConnection());
 $seo = SEOEngine::compileMetadata($title, $content, $category);
 
-$sql = "INSERT INTO posts (author_id, title, slug, summary, content, category, seo_title, seo_description, seo_keywords, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')";
-$success = $db->query($sql, "issssssss", [
-    $authorId, $title, $slug, $summary ?: mb_substr($content, 0, 150), $content, $category,
-    $seo['seo_title'], $seo['seo_description'], $seo['seo_keywords']
+// Parse the first image src if present from content as thumbnail_url
+$thumbnailUrl = null;
+if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $content, $matches)) {
+    $thumbnailUrl = $matches[1];
+}
+
+$sql = "INSERT INTO posts (author_id, title, slug, summary, content, category, seo_title, seo_description, seo_keywords, thumbnail_url, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'draft')";
+$success = $db->query($sql, "issssssssss", [
+    $authorId, $title, $slug, $summary ?: mb_substr(strip_tags($content), 0, 150), $content, $category,
+    $seo['seo_title'], $seo['seo_description'], $seo['seo_keywords'], $thumbnailUrl
 ]);
 
 if ($success) {

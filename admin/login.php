@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = trim($_POST['password'] ?? '');
     
     if (Auth::login($username, $password)) {
-        header('Location: /admin/dashboard.php');
+        header('Location: /admin/dashboard');
         exit;
     } else {
         $error = 'Invalid credentials. Administrative portal access denied.';

@@ -2,15 +2,22 @@
 /**
  * NeuralPress - Article Detail Template
  */
-require_once NP_DIR . '/includes/header.php';
-require_once NP_DIR . '/includes/navbar.php';
-
 use NeuralPress\Core\Database;
 
 $slug = $_GET['slug'] ?? '';
 $db = Database::getInstance();
 $res = $db->query("SELECT * FROM posts WHERE slug = ? LIMIT 1", "s", [$slug]);
 $post = ($res) ? $res->fetch_assoc() : null;
+
+// Assign SEO parameters ahead of the header rendering
+if ($post) {
+    $pageTitle = !empty($post['seo_title']) ? $post['seo_title'] : $post['title'];
+    $pageDescription = !empty($post['seo_description']) ? $post['seo_description'] : $post['summary'];
+    $pageKeywords = !empty($post['seo_keywords']) ? $post['seo_keywords'] : (strtolower($post['category']) . ', neuralpress');
+}
+
+require_once NP_DIR . '/includes/header.php';
+require_once NP_DIR . '/includes/navbar.php';
 
 if (!$post):
 ?>

@@ -85,6 +85,10 @@ export default function App() {
   const [manualCategory, setManualCategory] = useState<"World" | "Business" | "Technology" | "Sports">("World");
   const [manualSummary, setManualSummary] = useState<string>("");
   const [manualContent, setManualContent] = useState<string>("");
+  const [manualSeoTitle, setManualSeoTitle] = useState<string>("");
+  const [manualSeoDescription, setManualSeoDescription] = useState<string>("");
+  const [manualSeoKeywords, setManualSeoKeywords] = useState<string>("");
+  const [showSeoPanel, setShowSeoPanel] = useState<boolean>(false);
 
   // UI elements: Interactive carousel index
   const [carouselIndex, setCarouselIndex] = useState<number>(0);
@@ -204,7 +208,10 @@ export default function App() {
            title: manualTitle,
            category: manualCategory,
            summary: manualSummary,
-           content: manualContent
+           content: manualContent,
+           seo_title: manualSeoTitle,
+           seo_description: manualSeoDescription,
+           seo_keywords: manualSeoKeywords
          })
        });
 
@@ -215,6 +222,10 @@ export default function App() {
          setManualTitle("");
          setManualSummary("");
          setManualContent("");
+         setManualSeoTitle("");
+         setManualSeoDescription("");
+         setManualSeoKeywords("");
+         setShowSeoPanel(false);
          setShowManualForm(false);
          // Move to editor view
          setActiveTab("cms_dashboard");
@@ -884,12 +895,70 @@ export default function App() {
                   />
                 </div>
 
-                <button
-                  type="submit"
-                  className="bg-red-700 text-white font-bold text-xs px-6 py-2 rounded hover:bg-red-800 transition"
-                >
-                  Insert Draft Into System
-                </button>
+                {/* Manual SEO Configuration Panel */}
+                <div className="pt-4 border-t border-dashed mt-4 space-y-3">
+                  <div 
+                    onClick={() => setShowSeoPanel(!showSeoPanel)}
+                    className="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none"
+                  >
+                    <h4 className="text-xs font-mono font-bold uppercase tracking-widest text-emerald-700 flex items-center gap-1.5">
+                      🔒 // MANUAL SEO CONFIGURATION PANEL
+                    </h4>
+                    <span className="text-xs font-bold font-mono text-emerald-700">
+                      {showSeoPanel ? "[ COLLAPSE - ]" : "[ EXPAND + ]"}
+                    </span>
+                  </div>
+
+                  {showSeoPanel && (
+                    <div className="space-y-3 bg-slate-50 p-4 rounded border border-slate-200 transition-all">
+                      <p className="text-[10px] text-gray-500 italic leading-relaxed">
+                        Define custom search engine parameters below to override automatic models. Leaving fields blank triggers the system fallback compiler.
+                      </p>
+
+                      <div className="space-y-1">
+                        <label className="block text-[11px] font-mono uppercase text-slate-600 font-bold">Meta Title Override</label>
+                        <input
+                          type="text"
+                          value={manualSeoTitle}
+                          onChange={(e) => setManualSeoTitle(e.target.value)}
+                          placeholder="E.g., custom search engine meta title tag..."
+                          className="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white focus:outline-none focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[11px] font-mono uppercase text-slate-600 font-bold">Meta Description Override</label>
+                        <textarea
+                          rows={2}
+                          value={manualSeoDescription}
+                          onChange={(e) => setManualSeoDescription(e.target.value)}
+                          placeholder="E.g., optimized search engine snippet summary..."
+                          className="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white focus:outline-none focus:border-emerald-700"
+                        />
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[11px] font-mono uppercase text-slate-600 font-bold">Meta Keywords Override</label>
+                        <input
+                          type="text"
+                          value={manualSeoKeywords}
+                          onChange={(e) => setManualSeoKeywords(e.target.value)}
+                          placeholder="E.g., world, technology, customized, tag, string"
+                          className="w-full text-xs px-3 py-2 border border-slate-300 rounded bg-white focus:outline-none focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="submit"
+                    className="bg-red-700 text-white font-bold text-xs px-6 py-2 rounded hover:bg-red-800 transition shadow cursor-pointer"
+                  >
+                    Insert Draft Into System
+                  </button>
+                </div>
               </form>
             )}
 

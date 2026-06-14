@@ -19,7 +19,7 @@ if ($heroPost):
         <div class="space-y-3">
             <span class="text-[10px] font-mono uppercase tracking-widest text-[#bb1919] font-extrabold">// SPOTLIGHT VERIFIED INVESTIGATION</span>
             <h1 class="text-2xl sm:text-3xl font-black tracking-tight leading-tight hover:text-gray-300 transition">
-                <a href="/news/<?php echo htmlspecialchars($heroPost['slug']); ?>"><?php echo htmlspecialchars($heroPost['title']); ?></a>
+                <a href="<?php echo UrlManager::getArticleUrl($heroPost['slug']); ?>"><?php echo htmlspecialchars($heroPost['title']); ?></a>
             </h1>
             <p class="text-xs text-gray-400 leading-relaxed font-light">
                 <?php echo htmlspecialchars(\NeuralPress\Core\Helpers::truncate($heroPost['summary'] ?: $heroPost['content'], 180)); ?>

@@ -51,7 +51,7 @@ class Auth {
     public static function checkRole(array $allowedRoles): void {
         self::startSession();
         if (!isset($_SESSION['user_id'])) {
-            header('Location: /admin/login.php');
+            header('Location: /admin/login');
             exit;
         }
         if (!in_array($_SESSION['role'], $allowedRoles)) {
