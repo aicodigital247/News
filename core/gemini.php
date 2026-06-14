@@ -49,7 +49,7 @@ class GeminiAPI {
                     ]
                 ]
             ],
-            "config" => [
+            "generationConfig" => [
                 "temperature" => 0.2, // Low temperature for high deterministic accuracy (trust rating)
                 "topK" => 32,
                 "topP" => 0.95
@@ -57,11 +57,15 @@ class GeminiAPI {
         ];
 
         if (!empty($systemInstruction)) {
-            $payload["config"]["systemInstruction"] = $systemInstruction;
+            $payload["systemInstruction"] = [
+                "parts" => [
+                    ["text" => $systemInstruction]
+                ]
+            ];
         }
 
         if ($asJson) {
-            $payload["config"]["responseMimeType"] = "application/json";
+            $payload["generationConfig"]["responseMimeType"] = "application/json";
         }
 
         $headers = [

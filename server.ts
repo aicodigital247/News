@@ -545,6 +545,61 @@ app.post("/api/ads/optimize", (req, res) => {
 async function start() {
   await ensureDb();
 
+  // Try to run automated database upgrades in environments where live MySQL is active locally
+  try {
+    const mysql2 = await import("mysql2/promise");
+    const fsMod = await import("fs/promises");
+    const pathMod = await import("path");
+
+    const config = {
+      host: "127.0.0.1",
+      user: "db_user",
+      password: "db_secure_password_9031",
+      multipleStatements: true
+    };
+
+    const connection = await mysql2.createConnection(config);
+    console.log("Local MySQL connection established successfully. Upgrading database schemas...");
+
+    let log = `=== NODE DB UPGRADE LOG - ${new Date().toISOString()} ===\n`;
+
+    // 1. Run schema.sql
+    const schemaPath = pathMod.join(process.cwd(), "database", "schema.sql");
+    if (await fsMod.access(schemaPath).then(() => true).catch(() => false)) {
+      const schemaSql = await fsMod.readFile(schemaPath, "utf-8");
+      await connection.query(schemaSql);
+      log += "- schema.sql executed successfully.\n";
+    }
+
+    // 2. Run migrations.sql
+    const migrationsPath = pathMod.join(process.cwd(), "database", "migrations.sql");
+    if (await fsMod.access(migrationsPath).then(() => true).catch(() => false)) {
+      const migrationsSql = await fsMod.readFile(migrationsPath, "utf-8");
+      await connection.query(migrationsSql);
+      log += "- migrations.sql executed successfully.\n";
+    }
+
+    // 3. Run seed.sql
+    const seedPath = pathMod.join(process.cwd(), "database", "seed.sql");
+    if (await fsMod.access(seedPath).then(() => true).catch(() => false)) {
+      const seedSql = await fsMod.readFile(seedPath, "utf-8");
+      await connection.query(seedSql);
+      log += "- seed.sql executed successfully.\n";
+    }
+
+    log += "Database upgrade finished successfully!\n";
+    await fsMod.writeFile("node_db_upgrade.log", log);
+    await connection.end();
+    console.log("=== DATABASE UPGRADE COMPLETED SUCCESSFULLY ===");
+
+  } catch (err: any) {
+    if (err.code === "ECONNREFUSED" || err.message.includes("ECONNREFUSED")) {
+      console.log("MySQL is currently offline in this process context (normal for local development using file-based storage). Startup bypass applied.");
+    } else {
+      console.warn("Database startup check bypassed:", err.message);
+    }
+  }
+
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },

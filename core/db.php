@@ -25,6 +25,68 @@ class Database {
         if (defined('DB_NAME')) $this->name = DB_NAME;
 
         $this->connect();
+        $this->runMigrations();
+    }
+
+    private function runSqlFile(string $filePath): string {
+        if (!file_exists($filePath)) {
+            return "File not found: $filePath";
+        }
+        $sql = file_get_contents($filePath);
+        if ($sql === false) {
+            return "Could not read file: $filePath";
+        }
+
+        if ($this->connection->multi_query($sql)) {
+            $queriesRun = 0;
+            do {
+                $queriesRun++;
+                if ($result = $this->connection->store_result()) {
+                    $result->free();
+                }
+            } while ($this->connection->more_results() && $this->connection->next_result());
+            return "Success: Executed $queriesRun statements.";
+        } else {
+            return "Failed: " . $this->connection->error;
+        }
+    }
+
+    private function runMigrations(): void {
+        $logPath = NP_DIR . '/database_migration.log';
+        
+        $alreadyUpgraded = false;
+        try {
+            $tableCheck = @$this->connection->query("SHOW TABLES LIKE 'schema_versions'");
+            if ($tableCheck && $tableCheck->num_rows > 0) {
+                $versionCheck = @$this->connection->query("SELECT id FROM schema_versions WHERE version = '1.1.0'");
+                if ($versionCheck && $versionCheck->num_rows > 0) {
+                    $alreadyUpgraded = true;
+                }
+            }
+        } catch (\Exception $e) {
+            // DB schema might not have been initialized
+        }
+
+        if ($alreadyUpgraded) {
+            return;
+        }
+
+        $logData = date('[Y-m-d H:i:s]') . " Triggering NeuralPress Database Upgrade...\n";
+
+        // 1. Run schema.sql
+        $schemaResult = $this->runSqlFile(NP_DIR . '/database/schema.sql');
+        $logData .= "- schema.sql: $schemaResult\n";
+
+        // 2. Run migrations.sql
+        $migrationsResult = $this->runSqlFile(NP_DIR . '/database/migrations.sql');
+        $logData .= "- migrations.sql: $migrationsResult\n";
+
+        // 3. Run seed.sql
+        $seedResult = $this->runSqlFile(NP_DIR . '/database/seed.sql');
+        $logData .= "- seed.sql: $seedResult\n";
+
+        $logData .= "Database upgrade process completed.\n";
+        @file_put_contents($logPath, $logData);
     }
 
     private function connect(): void {

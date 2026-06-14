@@ -8,7 +8,14 @@ namespace NeuralPress\Core;
 class Cache {
     private static string $cacheDir = __DIR__ . '/../cache/';
 
+    private static function ensureCacheDir(): void {
+        if (!is_dir(self::$cacheDir)) {
+            @mkdir(self::$cacheDir, 0777, true);
+        }
+    }
+
     public static function set(string $key, $data, int $ttl = 300): void {
+        self::ensureCacheDir();
         $file = self::$cacheDir . md5($key) . '.cache';
         $payload = [
             'expires' => time() + $ttl,

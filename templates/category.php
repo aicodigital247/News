@@ -13,14 +13,17 @@ $res = $db->query("SELECT * FROM posts WHERE status = 'published' AND category =
 ?>
 
 <main class="max-w-7xl mx-auto px-6 py-8">
-    <h1 class="sidebar-title mb-8"><?php echo htmlspecialchars($category); ?> Investigations</h1>
+    <h1 class="text-xs font-mono uppercase tracking-widest text-slate-400 dark:text-slate-500 font-black mb-8 flex items-center gap-2">
+        <span class="inline-block w-2.5 h-2.5 bg-[#bb1919] rounded-sm animate-pulse"></span>
+        DIRECTORY ARCHIVE: <?php echo htmlspecialchars(strtoupper($category)); ?> INVESTIGATIVE COVERAGES
+    </h1>
     
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <!-- Main Category Grid -->
         <div class="lg:col-span-8">
             <?php if (!$res || $res->num_rows === 0): ?>
-                <div class="bg-white border border-slate-200 p-8 text-center rounded">
-                    <p class="text-slate-500 font-light">No active investigative archives in the <?php echo htmlspecialchars($category); ?> namespace.</p>
+                <div class="bg-white dark:bg-slate-900/40 border border-slate-205 dark:border-slate-800 p-10 text-center rounded-2xl shadow-xs">
+                    <p class="text-slate-500 dark:text-slate-400 font-light">No active investigative archives in the <?php echo htmlspecialchars($category); ?> namespace.</p>
                 </div>
             <?php else: ?>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">

@@ -57,7 +57,7 @@ class ImageEngine {
         }
 
         // Direct Fallback: Trigger Dynamic Server-side PHP GD Gradient generation
-        return "api/dynamic_hero.php?title=" . urlencode(substr($title, 0, 45)) . "&cat=" . urlencode($category);
+        return "/dynamic_hero.php?title=" . urlencode(substr($title, 0, 45)) . "&cat=" . urlencode($category);
     }
 
     /**

@@ -13,6 +13,7 @@ Auth::checkRole(['admin']);
     <meta charset="UTF-8">
     <title>AI Optimization Gate</title>
     <link rel="stylesheet" href="/assets/css/tailwind.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
     </style>

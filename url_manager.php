@@ -84,15 +84,6 @@ class UrlManager {
     }
 
     /**
-     * Get clean URL for an API endpoint (legacy API calls or native actions/routes)
-     */
-    public static function getApiUrl($endpoint) {
-        // Strip out trailing .php if requested cleanly
-        $endpoint = preg_replace('/\.php$/', '', $endpoint);
-        return self::getBaseUrl() . 'api/' . $endpoint;
-    }
-
-    /**
      * Get clean URL for administrative panel views
      */
     public static function getAdminUrl($view) {

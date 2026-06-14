@@ -1,17 +1,18 @@
 <?php
 /**
- * NeuralPress - Create & Edit Article Compose Panel
+ * NeuralPress - Creator Article Composition Panel
  */
 require_once __DIR__ . '/../config.php';
 use NeuralPress\Core\Auth;
 use NeuralPress\Core\Database;
 use NeuralPress\Core\SlugGenerator;
 
-Auth::checkRole(['admin', 'editor']);
+Auth::checkRole(['admin', 'editor', 'journalist']);
 $currentUser = Auth::getCurrentUser();
+$userId = intval($currentUser['id']);
 $db = Database::getInstance();
 
-// Load dynamic categories
+// Fetch dynamic categories
 $catListRes = $db->query("SELECT name FROM categories ORDER BY name ASC");
 $allCategories = [];
 if ($catListRes) {
@@ -39,8 +40,13 @@ $success = '';
 
 // Load existing post if in edit mode
 if ($isEdit) {
+    // SECURITY: Verify that this user owns the post or is admin/editor
     $res = $db->query("SELECT * FROM posts WHERE id = ?", "i", [$postId]);
     if ($res && $post = $res->fetch_assoc()) {
+        if ($post['author_id'] != $userId && !in_array($currentUser['role'], ['admin', 'editor'])) {
+            die("Access Denied: You are not authorized to edit this article.");
+        }
+        
         $title = $post['title'];
         $summary = $post['summary'];
         $content = $post['content'];
@@ -52,21 +58,23 @@ if ($isEdit) {
     } else {
         $isEdit = false;
         $postId = 0;
-        $error = "The requested article was not found. Composing a new draft instead.";
+        $error = "The requested article draft was not found. Composing a new draft instead.";
     }
 }
 
 /**
  * Helper to extract the first image src from WYSIWYG HTML content
  */
-function extractFirstImage($html) {
-    if (empty($html)) {
+if (!function_exists('extractFirstImage')) {
+    function extractFirstImage($html) {
+        if (empty($html)) {
+            return null;
+        }
+        if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $html, $matches)) {
+            return $matches[1];
+        }
         return null;
     }
-    if (preg_match('/<img[^>]+src=["\']([^"\']+)["\']/i', $html, $matches)) {
-        return $matches[1];
-    }
-    return null;
 }
 
 // Handle Form Submission
@@ -78,7 +86,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $summary = trim($_POST['summary'] ?? '');
     $content = trim($_POST['content'] ?? '');
     $category = trim($_POST['category'] ?? 'World');
-    $status = trim($_POST['status'] ?? 'draft');
+    
+    // For creators, status can only be 'draft' or 'pending_review' unless they are admin/editor
+    $reqStatus = trim($_POST['status'] ?? 'draft');
+    if (!in_array($currentUser['role'], ['admin', 'editor'])) {
+        if (!in_array($reqStatus, ['draft', 'pending_review'])) {
+            $reqStatus = 'pending_review';
+        }
+    }
+    $status = $reqStatus;
     
     // SEO fields manual overrides
     $seoTitle = trim($_POST['seo_title'] ?? '');
@@ -96,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $seoDescription = mb_substr(strip_tags($content), 0, 160);
         }
         if (empty($seoKeywords)) {
-            $seoKeywords = strtolower($category) . ", neuralpress, news";
+            $seoKeywords = strtolower($category) . ", creator, neuralpress";
         }
 
         // Extracted post thumbnail
@@ -119,22 +135,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
             
             if ($ok) {
-                $_SESSION['message'] = "Article '" . htmlspecialchars($title) . "' has been successfully updated natively!";
+                $_SESSION['message'] = "Article '" . htmlspecialchars($title) . "' has been updated successfully!";
                 $_SESSION['message_type'] = "success";
-                header("Location: /admin/posts");
+                header("Location: /creator/dashboard");
                 exit;
             } else {
-                $error = "Failed to update the database record. Ensure database integrity.";
+                $error = "Failed to update the database record.";
             }
         } else {
             // Create new post
-            $authorId = intval($currentUser['id'] ?? 1);
             require_once NP_DIR . '/core/slug_generator.php';
             $slug = SlugGenerator::create($title, $db->getConnection());
 
             $sql = "INSERT INTO posts (author_id, title, slug, summary, content, category, status, seo_title, seo_description, seo_keywords, thumbnail_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $ok = $db->query($sql, "issssssssss", [
-                $authorId,
+                $userId,
                 $title,
                 $slug,
                 $summary ?: mb_substr(strip_tags($content), 0, 150),
@@ -148,9 +163,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             if ($ok) {
-                $_SESSION['message'] = "New article draft successfully committed to persistent storage!";
+                $_SESSION['message'] = "New article successfully recorded! Awaiting moderator reviews.";
                 $_SESSION['message_type'] = "success";
-                header("Location: /admin/posts");
+                header("Location: /creator/dashboard");
                 exit;
             } else {
                 $error = "Failed to insert new post into the database.";
@@ -163,11 +178,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title><?php echo $isEdit ? 'Edit Article' : 'Compose Article'; ?> - NeuralPress CMS</title>
+    <title><?php echo $isEdit ? 'Modify Article' : 'Compose News Article'; ?> - Creator Panel</title>
     <link rel="stylesheet" href="/assets/css/tailwind.css">
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Load jQuery and Summernote Lite (Bootstrap-free WYSIWYG) -->
+    <!-- Load jQuery and Summernote Lite -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/summernote@0.9.0/dist/summernote-lite.min.js"></script>
@@ -175,7 +190,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
         
-        /* Harmonize Summernote styles with Tailwind Slate canvas */
         .note-editor.note-frame {
             border: 1px solid #cbd5e1 !important;
             border-radius: 6px !important;
@@ -209,31 +223,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="bg-gray-100 font-sans text-gray-900 flex flex-col min-h-screen">
     <header class="bg-black text-white h-14 flex items-center justify-between px-6 shrink-0 shadow-md">
         <span class="font-black tracking-tighter text-sm flex items-center gap-1.5 select-none">
-            <span class="bg-white text-black px-1 leading-none font-bold">N</span> NeuralPress CMS
+            <span class="bg-[#bb1919] text-white px-1 leading-none font-bold">C</span> Creator Panel
         </span>
         <div class="flex items-center gap-4 text-xs">
             <span>Logged in as: <strong><?php echo htmlspecialchars($currentUser['username']); ?></strong></span>
             <span class="text-gray-700">|</span>
-            <a href="/admin/posts" class="text-red-400 hover:underline">Back to Archives</a>
+            <a href="/creator/dashboard" class="text-red-400 hover:underline">Back to Dashboard</a>
         </div>
     </header>
 
     <div class="flex-grow flex flex-col md:flex-row max-w-7xl mx-auto w-full px-6 py-8 gap-8">
         <!-- Sidebar Navigation -->
         <nav class="w-full md:w-56 shrink-0 space-y-1 bg-white border border-gray-200 p-4 rounded text-xs font-bold uppercase tracking-wider h-fit">
-            <a href="/admin/dashboard" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Overview</a>
-            <a href="/admin/posts" class="block py-2 px-3 bg-red-50 text-[#bb1919] rounded">Post Archives</a>
-            <a href="/admin/categories" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Manage Categories</a>
-            <a href="/admin/review_queue" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Review Queue</a>
-            <a href="/admin/users" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Users & Roles</a>
-            <a href="/admin/withdrawals" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Creator Payouts</a>
-            <a href="/admin/ads" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Ad Monetisation</a>
-            <a href="/admin/settings" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Global Settings</a>
-            <div class="pt-6">
+            <a href="/creator/dashboard" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Dashboard</a>
+            <a href="/creator/write" class="block py-2 px-3 bg-red-50 text-[#bb1919] rounded font-bold">Compose Bulletin</a>
+            <a href="/creator/withdrawals" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">Withdrawals Log</a>
+            <a href="/creator/promotions" class="block py-2 px-3 text-slate-600 hover:bg-slate-50 hover:text-red-700 rounded">My Promotions</a>
+            <div class="pt-6 border-t border-dashed mt-4">
                 <a href="/" class="block text-center bg-[#bb1919] text-white py-2 select-none text-[10px] tracking-widest font-extrabold hover:bg-[#801111]">VIEW PUBLIC SITE</a>
-            </div>
-            <div class="pt-2">
-                <a href="/creator/dashboard" class="block text-center bg-emerald-600 text-white py-1.5 select-none text-[10px] tracking-widest font-extrabold hover:bg-emerald-700">CREATOR HUB</a>
             </div>
         </nav>
 
@@ -241,22 +248,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <main class="flex-1 space-y-6">
             <div class="flex items-center justify-between border-b pb-4">
                 <div>
-                    <h1 class="font-bold text-lg text-slate-900"><?php echo $isEdit ? 'Modify Existing Article Draft' : 'Compose News Bulletin Record'; ?></h1>
-                    <p class="text-xs text-slate-500 font-light">Prepare verified real-time feeds inside Node database persistence streams.</p>
+                    <h1 class="font-bold text-lg text-slate-900"><?php echo $isEdit ? 'Modify Authored Article' : 'Compose Independent News Article'; ?></h1>
+                    <p class="text-xs text-slate-500 font-light font-sans">Draft facts-first content; optimized headlines and metadata earn premium traffic payouts.</p>
                 </div>
-                <a href="/admin/posts" class="text-xs border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm text-slate-700">Cancel & Go Back</a>
+                <a href="/creator/dashboard" class="text-xs border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded shadow-sm text-slate-700">Cancel & Go Back</a>
             </div>
 
             <?php if (!empty($error)): ?>
-                <div class="p-4 rounded text-xs bg-red-50 text-red-700 border border-red-200">
-                    <?php echo htmlspecialchars($error); ?>
+                <div class="p-4 rounded text-xs bg-red-50 text-red-700 border border-red-200 font-medium">
+                    ❌ <?php echo htmlspecialchars($error); ?>
                 </div>
             <?php endif; ?>
 
             <form method="POST" action="" class="space-y-6 bg-white border p-6 rounded shadow-sm">
                 <?php echo \NeuralPress\Core\CSRF::renderField(); ?>
                 
-                <!-- Primary Article Information -->
+                <!-- Primary Editorial Inputs -->
                 <div class="space-y-4">
                     <h3 class="text-xs font-mono font-bold uppercase tracking-widest text-[#bb1919] border-b pb-1.5">// PRIMARY EDITORIAL INPUTS</h3>
                     
@@ -269,14 +276,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 required
                                 value="<?php echo htmlspecialchars($title); ?>"
                                 placeholder="Enter BBC-style neutral headline..."
-                                class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700"
+                                class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded focus:outline-none focus:border-red-700"
                             />
                         </div>
                         <div class="space-y-1">
                             <label class="block text-[11px] font-mono uppercase text-gray-500">Category Select <span class="text-red-500">*</span></label>
                             <select
                                 name="category"
-                                class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded focus:outline-none focus:border-red-700 bg-white"
+                                class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded focus:outline-none bg-white font-sans text-gray-800"
                             >
                                 <?php foreach ($allCategories as $catNameOption): ?>
                                     <option value="<?php echo htmlspecialchars($catNameOption); ?>" <?php echo ($category === $catNameOption) ? 'selected' : ''; ?>>
@@ -293,13 +300,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             name="summary"
                             rows="2"
                             placeholder="Enter immediate article teaser sentence to grip user feed flow..."
-                            class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded focus:outline-none focus:border-red-700 focus:ring-1 focus:ring-red-700"
+                            class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded focus:outline-none"
                         ><?php echo htmlspecialchars($summary); ?></textarea>
                     </div>
 
-                    <!-- Summernote integrated Narrative Body -->
+                    <!-- Summernote Body -->
                     <div class="space-y-1">
-                        <label class="block text-[11px] font-mono uppercase text-gray-500">Factual Body Narrative (WYSIWYG Editor) <span class="text-red-500">*</span></label>
+                        <label class="block text-[11px] font-mono uppercase text-gray-500">Body Narrative (WYSIWYG Editor) <span class="text-red-500">*</span></label>
                         <textarea
                             id="content"
                             name="content"
@@ -308,19 +315,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <div class="w-full md:w-1/3 space-y-1">
-                        <label class="block text-[11px] font-mono uppercase text-gray-500">Workflow Draft Gate</label>
+                        <label class="block text-[11px] font-mono uppercase text-gray-500">Article Flow Status</label>
                         <select
                             name="status"
-                            class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded focus:outline-none focus:border-[#bb1919] bg-white font-medium"
+                            class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded focus:outline-none bg-white font-medium"
                         >
-                            <option value="draft" <?php echo ($status === 'draft') ? 'selected' : ''; ?>>Draft (Internal stage only)</option>
-                            <option value="pending_review" <?php echo ($status === 'pending_review') ? 'selected' : ''; ?>>Pending Editorial Review</option>
-                            <option value="published" <?php echo ($status === 'published') ? 'selected' : ''; ?>>Publish to Broadcast Stream</option>
+                            <option value="draft" <?php echo ($status === 'draft') ? 'selected' : ''; ?>>Draft (Save internal copy)</option>
+                            <option value="pending_review" <?php echo ($status === 'pending_review' || $status === 'published') ? 'selected' : ''; ?>>Submit For Moderator Review</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Manual SEO Configuration Panel -->
+                <!-- Manual SEO Custom overrides -->
                 <div class="pt-6 border-t border-dashed mt-6 space-y-4">
                     <div class="flex items-center justify-between border-b pb-1.5 cursor-pointer select-none" onclick="toggleSEOPanel()">
                         <h3 class="text-xs font-mono font-bold uppercase tracking-widest text-emerald-700 flex items-center gap-1.5">
@@ -331,7 +337,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div id="seo_panel_body" class="hidden space-y-4 bg-slate-50/50 p-4 rounded border border-slate-200">
                         <p class="text-[11px] text-gray-500 italic max-w-2xl leading-relaxed">
-                            Define custom search engine parameters below to override automatic models. Leaving fields blank triggers the system fallback compiler.
+                            Define custom search engine parameters below to optimize your bulletin's keyword search ranking.
                         </p>
 
                         <div class="space-y-1">
@@ -341,7 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 name="seo_title"
                                 value="<?php echo htmlspecialchars($seoTitle); ?>"
                                 placeholder="E.g., custom search engine meta title tag..."
-                                class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded bg-white focus:outline-none focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700"
+                                class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded bg-white focus:outline-none"
                             />
                         </div>
 
@@ -351,7 +357,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 name="seo_description"
                                 rows="3"
                                 placeholder="E.g., optimized search engine snippet summary..."
-                                class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded bg-white focus:outline-none focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700"
+                                class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded bg-white focus:outline-none"
                             ><?php echo htmlspecialchars($seoDescription); ?></textarea>
                         </div>
 
@@ -362,7 +368,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 name="seo_keywords"
                                 value="<?php echo htmlspecialchars($seoKeywords); ?>"
                                 placeholder="E.g., world, technology, customized, tag, string"
-                                class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded bg-white focus:outline-none focus:border-emerald-700 focus:ring-1 focus:ring-emerald-700"
+                                class="w-full text-xs px-3.5 py-2 border border-slate-300 rounded bg-white focus:outline-none"
                             />
                         </div>
 
@@ -400,12 +406,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <!-- Form Action Controls -->
                 <div class="pt-4 border-t flex justify-end gap-3">
-                    <a href="/admin/posts" class="px-5 py-2 text-xs border border-slate-300 rounded hover:bg-slate-50 transition text-slate-700">Discard Changes</a>
+                    <a href="/creator/dashboard" class="px-5 py-2 text-xs border border-slate-300 rounded hover:bg-slate-50 transition text-slate-700">Discard Changes</a>
                     <button
                         type="submit"
-                        class="bg-[#bb1919] text-white font-bold text-xs px-6 py-2 rounded hover:bg-[#801111] transition shadow cursor-pointer"
+                        class="bg-[#bb1919] text-white font-bold text-xs px-6 py-2 rounded hover:bg-[#801111] transition shadow cursor-pointer font-mono"
                     >
-                        <?php echo $isEdit ? 'Commit Native Overwrite' : 'Save & Publish Draft'; ?>
+                        Save Bulletin Parameters
                     </button>
                 </div>
             </form>
@@ -416,7 +422,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Init Summernote lite
         $(document).ready(function() {
             $('#content').summernote({
-                placeholder: 'Start typing the factual article body narrative here...',
+                placeholder: 'Start typing the article body and story paragraphs...',
                 tabsize: 2,
                 height: 300,
                 toolbar: [
@@ -437,7 +443,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 }
             });
 
-            // Expand the SEO panel automatically if it has values already populated
             <?php if (!empty($seoTitle) || !empty($seoDescription) || !empty($seoKeywords)): ?>
                 toggleSEOPanel();
             <?php endif; ?>
@@ -489,7 +494,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             updateGooglePreview();
         });
 
-        // AJAX Image uploader to route uploaded assets into the /uploads folder natively
+        // AJAX Image uploader logic
         function uploadImage(file) {
             let data = new FormData();
             data.append("image", file);
@@ -518,7 +523,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             });
         }
 
-        // Toggle Expandable SEO Panel
         function toggleSEOPanel() {
             var panel = document.getElementById('seo_panel_body');
             var indicator = document.getElementById('seo_toggle_indicator');

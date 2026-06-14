@@ -16,7 +16,9 @@ require_once NP_DIR . '/includes/navbar.php';
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
         <!-- Primary Stream -->
         <div class="lg:col-span-8">
-            <h2 class="sidebar-title mb-6">Latest Investigations</h2>
+            <h2 class="text-xs font-mono uppercase tracking-widest text-slate-400 dark:text-slate-500 font-extrabold mb-6 flex items-center gap-2">
+                <span class="inline-block w-2.5 h-2.5 bg-[#bb1919] rounded-sm"></span> LATEST INVESTIGATIVE PIECES
+            </h2>
             <?php require_once NP_DIR . '/templates/partials/grid.php'; ?>
         </div>
 

@@ -75,21 +75,11 @@ if ($path === '/search') {
     exit;
 }
 
-// Unified API Route Mapping (removes .php from URLs)
-if (preg_match('~^/api/([a-zA-Z0-9_\-]+)$~i', $path, $matches)) {
-    $apiFile = NP_DIR . '/api/' . $matches[1] . '.php';
-    if (file_exists($apiFile)) {
-        require_once $apiFile;
-        exit;
-    } else {
-        http_response_code(404);
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => false,
-            'error' => 'API endpoint not resolved in active neural routing table.'
-        ]);
-        exit;
-    }
+// SEO-friendly Author Routing
+if (preg_match('~^/author/([0-9]+)$~i', $path, $matches)) {
+    $_GET['id'] = $matches[1];
+    require_once NP_DIR . '/templates/author.php';
+    exit;
 }
 
 // Unified Admin Route Mapping (removes .php from URLs)
@@ -101,6 +91,19 @@ if (preg_match('~^/admin/([a-zA-Z0-9_\-]+)$~i', $path, $matches)) {
     } else {
         http_response_code(404);
         echo "<h1>404 Not Found</h1><p>NeuralPress - Administrative panel node does not exist.</p>";
+        exit;
+    }
+}
+
+// Unified Creator Route Mapping (removes .php from URLs)
+if (preg_match('~^/creator/([a-zA-Z0-9_\-]+)$~i', $path, $matches)) {
+    $creatorFile = NP_DIR . '/creator/' . $matches[1] . '.php';
+    if (file_exists($creatorFile)) {
+        require_once $creatorFile;
+        exit;
+    } else {
+        http_response_code(404);
+        echo "<h1>404 Not Found</h1><p>NeuralPress - Creator Hub node does not exist.</p>";
         exit;
     }
 }

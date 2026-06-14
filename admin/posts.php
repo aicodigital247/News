@@ -8,7 +8,16 @@ use NeuralPress\Core\Database;
 
 Auth::checkRole(['admin', 'editor']);
 $db = Database::getInstance();
-$res = $db->query("SELECT * FROM posts ORDER BY id DESC");
+
+$page = max(1, intval($_GET['page'] ?? 1));
+$limit = 10;
+$offset = ($page - 1) * $limit;
+
+$countRes = $db->query("SELECT COUNT(*) as total FROM posts");
+$total = $countRes ? ($countRes->fetch_assoc()['total'] ?? 0) : 0;
+$totalPages = max(1, ceil($total / $limit));
+
+$res = $db->query("SELECT * FROM posts ORDER BY id DESC LIMIT ? OFFSET ?", "ii", [$limit, $offset]);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -16,6 +25,7 @@ $res = $db->query("SELECT * FROM posts ORDER BY id DESC");
     <meta charset="UTF-8">
     <title>Post Archives</title>
     <link rel="stylesheet" href="/assets/css/tailwind.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
     </style>
@@ -74,6 +84,21 @@ $res = $db->query("SELECT * FROM posts ORDER BY id DESC");
                     <?php endwhile; ?>
                 </tbody>
             </table>
+
+            <!-- Pagination Bar -->
+            <?php if ($totalPages > 1): ?>
+                <div class="flex flex-col sm:flex-row items-center justify-between border-t border-gray-100 pt-4 mt-4 gap-2">
+                    <span class="text-xs text-gray-500">Showing page <strong><?php echo $page; ?></strong> of <strong><?php echo $totalPages; ?></strong> (<?php echo $total; ?> total committed publications)</span>
+                    <div class="inline-flex gap-1.5">
+                        <a href="?page=<?php echo max(1, $page - 1); ?>" class="px-3 py-1.5 border rounded font-mono text-[11px] font-bold tracking-wider <?php echo ($page <= 1) ? 'text-gray-300 border-gray-150 cursor-not-allowed pointer-events-none' : 'text-slate-800 hover:bg-slate-50 bg-white'; ?>">
+                            &larr; PREV
+                        </a>
+                        <a href="?page=<?php echo min($totalPages, $page + 1); ?>" class="px-3 py-1.5 border rounded font-mono text-[11px] font-bold tracking-wider <?php echo ($page >= $totalPages) ? 'text-gray-300 border-gray-150 cursor-not-allowed pointer-events-none' : 'text-slate-800 hover:bg-slate-50 bg-white'; ?>">
+                            NEXT &rarr;
+                        </a>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </main>
 </body>

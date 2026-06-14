@@ -19,6 +19,9 @@ if (isset($_SESSION['message'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'verify') {
+    if (!\NeuralPress\Core\CSRF::checkToken($_POST['csrf_token'] ?? '')) {
+        die("CSRF verification failed.");
+    }
     $postId = intval($_POST['id'] ?? 0);
     if ($postId > 0) {
         $resPost = $db->query("SELECT title, content FROM posts WHERE id = ?", "i", [$postId]);
@@ -50,6 +53,7 @@ $res = $db->query("SELECT * FROM posts WHERE status = 'pending_review' ORDER BY 
     <meta charset="UTF-8">
     <title>NeuralPress Editorial Review Queue</title>
     <link rel="stylesheet" href="/assets/css/tailwind.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Helvetica+Neue:wght@400;500;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
     </style>
@@ -89,6 +93,7 @@ $res = $db->query("SELECT * FROM posts WHERE status = 'pending_review' ORDER BY 
                                 <td class="py-3 font-mono font-bold text-emerald-600"><?php echo intval($row['trust_score']); ?>%</td>
                                 <td class="py-3">
                                     <form method="POST" action="" class="inline">
+                                        <?php echo \NeuralPress\Core\CSRF::renderField(); ?>
                                         <input type="hidden" name="id" value="<?php echo $row['id']; ?>">
                                         <input type="hidden" name="action" value="verify">
                                         <button type="submit" class="bg-[#bb1919] text-white px-2.5 py-1 text-[10px] font-bold uppercase hover:bg-[#801111] cursor-pointer">Verify Natively</button>
